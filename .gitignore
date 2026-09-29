@@ -1,0 +1,7 @@
+node_modules/
+dist/
+public/mediapipe/wasm/
+public/mediapipe/pose-worker.js
+.tmp/
+test-results/
+.claude/settings.local.json

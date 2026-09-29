@@ -1,0 +1,15 @@
+import { chromium } from '@playwright/test';
+import assert from 'node:assert/strict';
+const browser=await chromium.launch({channel:'msedge',headless:true,args:['--use-fake-device-for-media-stream','--use-fake-ui-for-media-stream']});
+const page=await browser.newPage({viewport:{width:1440,height:900},permissions:['camera']});
+const errors=[],requests=[];
+page.on('pageerror',e=>errors.push(e.message));page.on('console',m=>{if(m.type()==='error')errors.push(m.text());});page.on('request',r=>requests.push(r.url()));
+await page.goto('http://127.0.0.1:4173/?dev');await page.locator('#start').click();
+await page.waitForFunction(()=>document.querySelector('video').videoWidth>0);await page.waitForTimeout(7000);
+assert.equal(await page.evaluate(()=>typeof window.bowlingDev),'undefined');
+assert.equal(await page.locator('#start-error').innerText(),'');
+assert.match(await page.locator('#status').innerText(),/Arm not visible/);
+assert.ok(requests.every(url=>url.startsWith('http://127.0.0.1:4173/')||url.startsWith('blob:')));
+await page.screenshot({path:'.tmp/production-camera.png'});
+assert.deepEqual(errors,[]);console.log('Production startup and MediaPipe inference pass; simulation hook absent; all requests local.');
+await browser.close();
